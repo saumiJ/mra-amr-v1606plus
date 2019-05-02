@@ -1,0 +1,4 @@
+reconstructParAMR.C
+processorMeshesAMR.C
+
+EXE = $(FOAM_APPBIN)/reconstructParAMR
