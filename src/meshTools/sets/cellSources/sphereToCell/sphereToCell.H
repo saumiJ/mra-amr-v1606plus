@@ -116,6 +116,16 @@ public:
             topoSet&
         ) const;
 
+        vector getCentre()
+        {
+            return centre_;
+        }
+
+        scalar getRadius()
+        {
+            return radius_;
+        }
+
 };
 
 

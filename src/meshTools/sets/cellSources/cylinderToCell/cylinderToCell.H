@@ -120,6 +120,21 @@ public:
             topoSet&
         ) const;
 
+        vector getPoint1()
+        {
+            return p1_;
+        }
+
+        vector getPoint2()
+        {
+            return p2_;
+        }
+
+        scalar getRadius()
+        {
+            return radius_;
+        }
+
 };
 
 
