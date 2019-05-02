@@ -113,6 +113,11 @@ public:
             topoSet&
         ) const;
 
+        treeBoundBoxList getBoundingBoxList()
+        {
+            return bbs_;
+        }
+
 };
 
 
