@@ -1,0 +1,209 @@
+#---------------------------------*- sh -*-------------------------------------
+# =========                 |
+# \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+#  \\    /   O peration     |
+#   \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+#    \\/     M anipulation  | Copyright (C) 2015-2016 OpenCFD Ltd.
+#------------------------------------------------------------------------------
+# License
+#     This file is part of OpenFOAM.
+#
+#     OpenFOAM is free software: you can redistribute it and/or modify it
+#     under the terms of the GNU General Public License as published by
+#     the Free Software Foundation, either version 3 of the License, or
+#     (at your option) any later version.
+#
+#     OpenFOAM is distributed in the hope that it will be useful, but WITHOUT
+#     ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+#     FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+#     for more details.
+#
+#     You should have received a copy of the GNU General Public License
+#     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
+#
+# Script
+#     RunFunctions
+#
+# Description
+#     Miscellaneous functions for running tutorial cases
+#------------------------------------------------------------------------------
+
+isTest()
+{
+    for i in "$@"; do
+        if [ "$i" = "-test" ]
+        then
+            return 0
+        fi
+    done
+    return 1
+}
+
+getNumberOfProcessors()
+{
+    if [ -f "$1" ]
+    then
+        expandDictionary $1 | sed -ne 's/^numberOfSubdomains\s*\(.*\);/\1/p'
+    fi
+}
+
+getApplication()
+{
+    sed -ne 's/^ *application\s*\([a-zA-Z]*\)\s*;.*$/\1/p' system/controlDict
+}
+
+runApplication()
+{
+    LOG_NAME=
+    APP_RUN=
+    LOG_IGNORE=false
+    LOG_APPEND=false
+    LOG_SUFFIX=
+
+    # Parse options and executable
+    while [ $# -gt 0 ] && [ -z "$APP_RUN" ]; do
+        key="$1"
+        case "$key" in
+            -append|-a)
+                LOG_IGNORE=true
+                LOG_APPEND=true
+                ;;
+            -overwrite|-o)
+                LOG_IGNORE=true
+                ;;
+            -suffix|-s)
+                LOG_SUFFIX=".$2"
+                shift
+                ;;
+            *)
+                APP_RUN="$key"
+                APP_NAME="${key##*/}"
+                LOG_SUFFIX="${APP_NAME}${LOG_SUFFIX}"
+                ;;
+        esac
+        shift
+    done
+
+    if [ -f log.$LOG_SUFFIX ] && [ "$LOG_IGNORE" = "false" ]
+    then
+        echo "$APP_NAME already run on $PWD:" \
+             "remove log file 'log.$LOG_SUFFIX' to re-run"
+    else
+        echo "Running $APP_RUN on $PWD"
+        if [ "$LOG_APPEND" = "true" ]; then
+            $APP_RUN "$@" >> log.$LOG_SUFFIX 2>&1
+        else
+            $APP_RUN "$@" > log.$LOG_SUFFIX 2>&1
+        fi
+    fi
+}
+
+runParallel()
+{
+    LOG_NAME=
+    APP_RUN=
+    # Store any parsed additional arguments e.g. decomposeParDict
+    APP_PARARGS=
+    LOG_IGNORE=false
+    LOG_APPEND=false
+    LOG_SUFFIX=
+    # Check the default decomposeParDict if available
+    nProcs=$(getNumberOfProcessors "system/decomposeParDict")
+
+    # Parse options and executable
+    while [ $# -gt 0 ] && [ -z "$APP_RUN" ] ; do
+        key="$1"
+        case "$key" in
+            -append|-a)
+                LOG_IGNORE=true
+                LOG_APPEND=true
+                ;;
+            -overwrite|-o)
+                LOG_IGNORE=true
+                ;;
+            -suffix|-s)
+                LOG_SUFFIX=".$2"
+                shift
+                ;;
+            -np|-n)
+                nProcs="$2"
+                shift
+                ;;
+            -decomposeParDict)
+                nProcs=$(getNumberOfProcessors "$2")
+                APP_PARARGS="$APP_PARARGS -decomposeParDict $2"
+                shift
+                ;;
+            *)
+                APP_RUN="$key"
+                APP_NAME="${key##*/}"
+                LOG_SUFFIX="${APP_NAME}${LOG_SUFFIX}"
+                ;;
+        esac
+
+        shift
+    done
+
+    if [ -f log.$SUFFIX ] && [ "$LOG_IGNORE" = "false" ]
+    then
+        echo "$APP_NAME already run on $PWD:" \
+             "remove log file 'log.$LOG_SUFFIX' to re-run"
+    else
+        echo "Running $APP_RUN in parallel on $PWD using $nProcs processes"
+        if [ "$LOG_APPEND" = "true" ]; then
+            ( mpirun -np $nProcs $APP_RUN $APP_PARARGS -parallel "$@" < /dev/null >> log.$LOG_SUFFIX 2>&1 )
+        else
+            ( mpirun -np $nProcs $APP_RUN $APP_PARARGS -parallel "$@" < /dev/null > log.$LOG_SUFFIX 2>&1 )
+        fi
+    fi
+}
+
+compileApplication()
+{
+    echo "Compiling $1 application"
+    wmake $1
+}
+
+cloneCase()
+{
+    if [ -d "$2" ]
+    then
+        echo "Case already cloned: remove case directory $2 to clone"
+    else
+        echo "Cloning $2 case from $1"
+        mkdir $2
+        cpfiles="0 system constant"
+        for f in $cpfiles
+        do
+            \cp -r $1/$f $2
+        done
+    fi
+}
+
+# Overwrite 0/ with the contents of 0.org/ if it exists.
+# The -processor option to do the processor directories instead
+#
+restore0Dir()
+{
+    if [ "$1" = "-processor" ]
+    then
+        echo "Restore 0/ from 0.org/ for processor directories"
+        [ -d 0.org ] || echo "    Warning: no 0.org/ found"
+
+        # do nonetheless
+        \ls -d processor* | xargs -I {} \rm -rf ./{}/0
+        \ls -d processor* | xargs -I {} \cp -r 0.org ./{}/0 > /dev/null 2>&1
+
+    else
+        echo "Restore 0/ from 0.org/"
+        if [ -d 0.org ]
+        then
+            \rm -rf 0
+            \cp -r 0.org 0 > /dev/null 2>&1
+        else
+            echo "    Warning: no 0.org/ found"
+        fi
+    fi
+}
+
+#------------------------------------------------------------------------------

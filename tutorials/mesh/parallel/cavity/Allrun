@@ -1,0 +1,39 @@
+#!/bin/sh
+cd ${0%/*} || exit 1    # Run from this directory
+
+# Source tutorial run functions
+. $WM_PROJECT_DIR/bin/tools/RunFunctions
+
+runApplication blockMesh
+
+#cp system/decomposeParDict-2 system/decomposeParDict
+#runApplication decomposePar
+
+# redistributePar to do decomposition
+runParallel -s decompose redistributePar -decompose
+
+# Bit of renumbering and running
+runParallel -s CuthillMcKee renumberMesh -overwrite
+runParallel -s CuthillMcKee icoFoam
+
+# Bit of bad renumbering and running
+runParallel -s random renumberMesh \
+    -overwrite -dict system/renumberMeshDict-random
+runParallel -s random icoFoam
+
+# Pick up last result
+cp system/controlDict-latestTime system/controlDict
+
+# Redistribute to 5 processors
+runParallel -s 5 -np 5 redistributePar \
+    -decomposeParDict system/decomposeParDict-5 -cellDist
+
+# Run a bit more
+runParallel -s 5 -np 5 icoFoam \
+    -decomposeParDict system/decomposeParDict-5
+
+# Reconstruct mesh and results
+runParallel -s reconstruct  -np 5 redistributePar -reconstruct
+
+
+# -----------------------------------------------------------------------------

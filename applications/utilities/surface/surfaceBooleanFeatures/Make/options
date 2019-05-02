@@ -1,0 +1,28 @@
+EXE_NDEBUG = -DNDEBUG
+/* EXE_NDEBUG = -g -O0 -DFULLDEBUG */
+
+
+c++CGALWARN = -Wno-old-style-cast
+
+/*-- Define NO_CGAL to avoid using CGAL altogether */
+/*-- Define CGAL_INEXACT to use inexact CGAL constructions */
+
+include $(GENERAL_RULES)/CGAL
+
+EXE_INC = \
+    ${ROUNDING_MATH} \
+    ${EXE_NDEBUG} \
+    ${CGAL_INC} \
+    ${c++CGALWARN} \
+    $(COMPILE_FLAGS) \
+    -I$(FOAM_SRC)/surfMesh/lnInclude \
+    -I$(FOAM_SRC)/triSurface/lnInclude \
+    -I$(LIB_SRC)/edgeMesh/lnInclude \
+    -I$(LIB_SRC)/meshTools/lnInclude
+
+EXE_LIBS = \
+    -lsurfMesh \
+    -ltriSurface \
+    -ledgeMesh \
+    -lmeshTools \
+    $(LINK_FLAGS)

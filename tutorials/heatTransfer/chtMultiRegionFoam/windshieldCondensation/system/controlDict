@@ -1,0 +1,97 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v1606+                                |
+|   \\  /    A nd           | Web:      www.OpenFOAM.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      controlDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#include "solverControls"
+
+libs            ("libliquidPropertiesFvPatchFields.so");
+
+application     chtMultiRegionFoam;
+
+startFrom       startTime;
+
+startTime       0;
+
+stopAt          endTime;
+
+endTime         90;
+
+deltaT          0.01;
+
+writeControl    adjustableRunTime;
+
+purgeWrite      0;
+
+writeFormat     binary;
+
+writePrecision  10;
+
+writeCompression off;
+
+timeFormat      general;
+
+timePrecision   6;
+
+runTimeModifiable true;
+
+adjustTimeStep  yes;
+
+maxDi           10;
+
+functions
+{
+    H2O
+    {
+        type            scalarTransport;
+
+        functionObjectLibs ("libutilityFunctionObjects.so");
+
+        resetOnStartUp  no;
+
+        region cabin;
+
+
+        // employ schemes used by U to the scalar transport equation
+        // note: field name is given by the name of the function, in this case
+        // 'scalar1'
+        autoSchemes     no;
+
+        fvOptions
+        {
+        }
+    }
+
+    fileUpdate
+    {
+        type                timeActivatedFileUpdate;
+        functionObjectLibs  ("libutilityFunctionObjects.so");
+        outputControl       timeStep;
+        outputInterval      1;
+        region              cabin;
+        fileToUpdate        "$FOAM_CASE/system/solverControls";
+
+        timeVsFile
+        (
+            ( 1     "$FOAM_CASE/system/solverControls.0" )
+            ( 5     "$FOAM_CASE/system/solverControls.5")
+            ( 20    "$FOAM_CASE/system/solverControls.20")
+            ( 60    "$FOAM_CASE/system/solverControls.60")
+        );
+    }
+}
+
+
+// ************************************************************************* //

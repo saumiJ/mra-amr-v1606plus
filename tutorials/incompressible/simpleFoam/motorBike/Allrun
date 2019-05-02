@@ -1,0 +1,29 @@
+#!/bin/sh
+cd ${0%/*} || exit 1    # Run from this directory
+
+# Source tutorial run functions
+. $WM_PROJECT_DIR/bin/tools/RunFunctions
+
+# copy motorbike surface from resources directory
+\cp $FOAM_TUTORIALS/resources/geometry/motorBike.obj.gz constant/triSurface/
+runApplication surfaceFeatureExtract
+
+runApplication blockMesh
+
+runApplication decomposePar
+runParallel snappyHexMesh -overwrite
+
+#- For non-parallel running: - set the initial fields
+# restore0Dir
+
+#- For parallel running: set the initial fields
+restore0Dir -processor
+
+runParallel patchSummary
+runParallel potentialFoam
+runParallel $(getApplication)
+
+runApplication reconstructParMesh -constant
+runApplication reconstructPar -latestTime
+
+#------------------------------------------------------------------------------

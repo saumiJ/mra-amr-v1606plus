@@ -1,0 +1,48 @@
+#!/bin/sh
+cd ${0%/*} || exit 1    # Run from this directory
+
+# Source the wmake functions
+. $WM_DIR/scripts/wmakeFunctions
+
+# The source directory
+sourceDir=$PWD
+
+# Where are any generated files stored?
+findObjectDir $sourceDir
+depDir="$objectsDir"
+
+echo
+echo "======================================================================"
+echo "${PWD##*/} : $PWD"
+echo
+
+if [ -d "$VTK_DIR" -o -d "$ParaView_DIR" ]
+then
+    # ensure CMake gets the correct C++ compiler
+    [ -n "$WM_CXX" ] && export CXX="$WM_CXX"
+    [ -n "$WM_CC" ] && export CC="$WM_CC"
+
+    if type cmake > /dev/null 2>&1
+    then
+    (
+        mkdir -p $depDir \
+        && cd $depDir \
+        && cmake $sourceDir \
+        && make
+    ) || {
+        echo
+        echo "WARNING: incomplete build of VTK-based post-processing"
+    }
+    else
+        echo "WARNING: skipped - needs cmake"
+    fi
+else
+    echo "WARNING: skipped - needs a VTK or a ParaView installation"
+    echo "    - For ParaView  : export the 'ParaView_DIR' variable"
+    echo "    - For VTK       : export the 'VTK_DIR'      variable"
+fi
+
+echo "======================================================================"
+echo
+
+# ----------------------------------------------------------------- end-of-file
