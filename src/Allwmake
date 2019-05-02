@@ -21,7 +21,7 @@ wmakeCheckPwd "$WM_PROJECT_DIR/src" || {
 set -x
 
 # Update OpenFOAM version strings if required
-wmakePrintBuild -check || wrmo OpenFOAM/global/global.o
+wmakePrintBuild -check || /bin/rm -f OpenFOAM/Make/*/global.? 2>/dev/null
 
 wmakeLnInclude OpenFOAM
 wmakeLnInclude OSspecific/${WM_OSTYPE:-POSIX}
@@ -51,13 +51,14 @@ wmake $targetType genericPatchFields
 wmake $targetType conversion
 wmake $targetType mesh/extrudeModel
 wmake $targetType dynamicMesh
+
+# Compile scotchDecomp, metisDecomp etc. needed by dynamicFvMesh
+parallel/Allwmake $targetType $*
+
 wmake $targetType dynamicFvMesh
 wmake $targetType sampling
 wmake $targetType topoChangerFvMesh
 wmake $targetType sampling
-
-# Compile scotchDecomp, metisDecomp etc.
-parallel/Allwmake $targetType $*
 
 wmake $targetType ODE
 wmake $targetType randomProcesses
