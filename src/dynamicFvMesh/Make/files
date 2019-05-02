@@ -5,6 +5,11 @@ dynamicMotionSolverFvMesh/dynamicMotionSolverFvMesh.C
 dynamicInkJetFvMesh/dynamicInkJetFvMesh.C
 dynamicRefineFvMesh/dynamicRefineFvMesh.C
 
+dynamicRefineMRAFvMesh/dynamicRefineMRAFvMesh.C
+dynamicRefineMRAFvMesh/hexTetRef8/hexTetRef8.C
+dynamicRefineMRAFvMesh/hexTetRef8/hexTetRef8Data.C
+dynamicRefineMRAFvMesh/hexTetRef8/refinementMRAHistory.C
+
 solidBodyMotionFvMesh/solidBodyMotionFvMesh.C
 solidBodyMotionFvMesh/multiSolidBodyMotionFvMesh.C
 solidBodyMotionFunctions = solidBodyMotionFvMesh/solidBodyMotionFunctions
