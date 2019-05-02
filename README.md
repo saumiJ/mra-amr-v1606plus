@@ -1,3 +1,13 @@
+# Enhanced adaptive mesh refinement in OpenFOAM-v1606+
+- Multiresolution analysis based refinement criterion
+- Decomposition of polyhedra to tetrahedra
+- Tetrahedral refinement / coarsening engine
+- Refinement of primitive boundaries for initialization using `setFields`
+- Reconstruction of AMR meshes
+- Load-balancing (thanks to [tgvoskuilen](https://github.com/tgvoskuilen/meshBalancing))
+
+Master-thesis [here](https://www5.in.tum.de/pub/Joshi2016_Thesis.pdf).
+
 # About OpenFOAM
 OpenFOAM is a free, open source CFD software package developed primarily by [OpenCFD](http://www.openfoam.com) since 2004 and is currently distributed by [ESI-OpenCFD](http://www.openfoam.com) and the [OpenFOAM Foundation](http://openfoam.org). It has a large user base across most areas of engineering and science, from both commercial and academic organisations. OpenFOAM has an extensive range of features to solve anything from complex fluid flows involving chemical reactions, turbulence and heat transfer, to acoustics, solid mechanics and electromagnetics.  [More...](http://www.openfoam.com/documentation)
 
@@ -20,4 +30,3 @@ OpenCFD Limited, owner of the OpenFOAM Trademark, has granted the use of the Tra
 - [Contacting OpenCFD](http://www.openfoam.com/contact)
 
 Copyright 2016 OpenCFD Ltd
-# mra-amr-v1606plus
